@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">GAuth Demo</string>
+    <string name="server_client_id">195435927242-nrkf6ej41i9jk2jo75pdjsum1n4kn8j6.apps.googleusercontent.com</string>
 </resources>
