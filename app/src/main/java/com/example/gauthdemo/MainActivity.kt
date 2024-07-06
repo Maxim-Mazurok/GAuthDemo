@@ -25,6 +25,12 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
 import com.google.android.gms.tasks.Task
 import com.google.api.services.calendar.CalendarScopes
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONObject
+import java.io.IOException
 
 class MainActivity : ComponentActivity() {
 
@@ -61,6 +67,43 @@ class MainActivity : ComponentActivity() {
         handleSignInResult(task)
     }
 
+    private fun sendPostRequest(url: String, parameters: Map<String, String>) {
+        val client = OkHttpClient()
+
+        // Step 1: Create a JSON Object
+        val json = JSONObject(parameters).toString()
+
+        // Step 2: Convert JSON to RequestBody
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val requestBody = json.toRequestBody(mediaType)
+
+        // Step 3: Update Request Building
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+
+        // Step 4: Send Request
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                e.printStackTrace()
+                // Handle failure
+                Log.e("MainActivity", "onFailure Error: ${e.message}")
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                val responseBody = response.body?.string()
+                if (response.isSuccessful) {
+                    // Handle success
+                    Log.d("MainActivity", "onResponse Response: $responseBody")
+                } else {
+                    // Handle error
+                    Log.e("MainActivity", "onResponse Error: ${response.code}, $responseBody")
+                }
+            }
+        })
+    }
+
     private fun handleSignInResult(completedTask: Task<GoogleSignInAccount>) {
         try {
             val account = completedTask.getResult(ApiException::class.java)
@@ -70,6 +113,9 @@ class MainActivity : ComponentActivity() {
             // Log the tokens
             Log.d("MainActivity", "ID Token: $idToken")
             Log.d("MainActivity", "Auth Code: $authCode")
+
+            // TODO: replace the URL with actual server URL and remove plain text policy
+            sendPostRequest("http://172.20.154.244:3000/auth", mapOf("idToken" to idToken!!, "authCode" to authCode!!))
 
             // Update UI or perform other actions with the account information
             updateUI(account)

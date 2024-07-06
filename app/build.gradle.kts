@@ -76,4 +76,5 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     implementation(libs.google.api.services.calendar)
+    implementation(libs.okhttp)
 }

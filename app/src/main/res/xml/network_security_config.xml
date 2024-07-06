@@ -1,0 +1,6 @@
+<!-- TODO: Remove this when releasing to production -->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">172.20.154.244</domain>
+    </domain-config>
+</network-security-config>
