@@ -1,7 +1,11 @@
 package com.example.gauthdemo
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.example.gauthdemo.ui.theme.GAuthDemoTheme
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -25,6 +30,8 @@ import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
 import com.google.android.gms.tasks.Task
 import com.google.api.services.calendar.CalendarScopes
+import com.google.firebase.Firebase
+import com.google.firebase.messaging.messaging
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -114,6 +121,8 @@ class MainActivity : ComponentActivity() {
             Log.d("MainActivity", "ID Token: $idToken")
             Log.d("MainActivity", "Auth Code: $authCode")
 
+            logRegToken()
+
             // TODO: replace the URL with actual server URL and remove plain text policy
             sendPostRequest("http://172.20.154.244:3000/auth", mapOf("idToken" to idToken!!, "authCode" to authCode!!))
 
@@ -134,6 +143,59 @@ class MainActivity : ComponentActivity() {
             // Update your UI here
         }
     }
+
+    // FCM stuff below, inspired by https://github.com/firebase/snippets-android/blob/master/messaging/app/src/main/java/com/google/firebase/example/messaging/kotlin/MainActivity.kt
+
+    private fun logRegToken() {
+        // [START log_reg_token]
+        Firebase.messaging.getToken().addOnCompleteListener { task ->
+            if (!task.isSuccessful) {
+                Log.w("MainActivity", "Fetching FCM registration token failed", task.exception)
+                return@addOnCompleteListener
+            }
+
+            // Get new FCM registration token
+            val token = task.result
+
+            // Log and toast
+            val msg = "FCM Registration token: $token"
+            Log.d("MainActivity", msg)
+            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+        }
+        // [END log_reg_token]
+    }
+
+    // [START ask_post_notifications]
+    // Declare the launcher at the top of your Activity/Fragment:
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            // FCM SDK (and your app) can post notifications.
+        } else {
+            // TODO: Inform user that that your app will not show notifications.
+        }
+    }
+
+    private fun askNotificationPermission() { // TODO: use this
+        // This is only necessary for API level >= 33 (TIRAMISU)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                // FCM SDK (and your app) can post notifications.
+            } else if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                // TODO: display an educational UI explaining to the user the features that will be enabled
+                //       by them granting the POST_NOTIFICATION permission. This UI should provide the user
+                //       "OK" and "No thanks" buttons. If the user selects "OK," directly request the permission.
+                //       If the user selects "No thanks," allow the user to continue without notifications.
+            } else {
+                // Directly ask for the permission
+                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+    // [END ask_post_notifications]
 }
 
 @Composable

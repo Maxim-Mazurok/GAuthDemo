@@ -15,3 +15,4 @@
 - Make sure app is signed using the debug key
 - Device has to be signed into Google account (especially emulator)
 - During early development if app isn't published - signed in account has to be the same one as the API keys owner account
+- For FCM to work, download `google-services.json` from Firebase Console and place it in the `/app` folder, see [docs](https://firebase.google.com/docs/android/setup#add-config-file)
