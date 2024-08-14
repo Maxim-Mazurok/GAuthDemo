@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
             .requestIdToken(getString(R.string.server_client_id))
             .requestEmail()
             .requestServerAuthCode(getString(R.string.server_client_id))
-            .requestScopes(Scope(CalendarScopes.CALENDAR))
+            .requestScopes(Scope(CalendarScopes.CALENDAR_EVENTS_READONLY))
             .build()
 
         googleSignInClient = GoogleSignIn.getClient(this, gso)
@@ -121,13 +121,17 @@ class MainActivity : ComponentActivity() {
             Log.d("MainActivity", "ID Token: $idToken")
             Log.d("MainActivity", "Auth Code: $authCode")
 
-            logRegToken()
+            getFCMRegistrationToken { fcmRegistrationToken ->
+                // TODO: replace the URL with actual server URL and remove plain text policy
+                sendPostRequest("http://172.20.154.244:3000/auth", mapOf(
+                    "idToken" to idToken!!,
+                    "authCode" to authCode!!,
+                    "fcmRegistrationToken" to fcmRegistrationToken
+                ))
 
-            // TODO: replace the URL with actual server URL and remove plain text policy
-            sendPostRequest("http://172.20.154.244:3000/auth", mapOf("idToken" to idToken!!, "authCode" to authCode!!))
-
-            // Update UI or perform other actions with the account information
-            updateUI(account)
+                // Update UI or perform other actions with the account information
+                updateUI(account)
+            }
         } catch (e: ApiException) {
             Log.w("MainActivity", "signInResult:failed code=" + e.statusCode)
             updateUI(null)
@@ -146,7 +150,7 @@ class MainActivity : ComponentActivity() {
 
     // FCM stuff below, inspired by https://github.com/firebase/snippets-android/blob/master/messaging/app/src/main/java/com/google/firebase/example/messaging/kotlin/MainActivity.kt
 
-    private fun logRegToken() {
+    private fun getFCMRegistrationToken(callback: (String) -> Unit) {
         // [START log_reg_token]
         Firebase.messaging.getToken().addOnCompleteListener { task ->
             if (!task.isSuccessful) {
@@ -161,6 +165,9 @@ class MainActivity : ComponentActivity() {
             val msg = "FCM Registration token: $token"
             Log.d("MainActivity", msg)
             Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+
+            // Pass the token to the callback
+            callback(token)
         }
         // [END log_reg_token]
     }
