@@ -68,7 +68,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.play.services.auth)
     implementation(libs.androidx.appcompat)
-    implementation(libs.firebase.bom)
+    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.messaging.ktx)
     implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
